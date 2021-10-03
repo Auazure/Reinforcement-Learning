@@ -126,7 +126,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
 
     def update_priorities(self, idxs, prios):
         assert idxs.shape[0] == prios.shape[0]
-
+        #prios=prios.flatten()
         for idx, prio in zip(idxs, prios):
             assert prio > 0
             assert 0 <= idx < len(self)

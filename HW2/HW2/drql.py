@@ -199,8 +199,9 @@ class Critic(nn.Module):
 
         if dueling:
             # TODO dueling DQN, define the value and the advantage network
-            self.V = None
-            self.A = None
+            self.V = utils.mlp(self.encoder.feature_dim,hidden_dim,1,hidden_depth)
+            self.A = utils.mlp(self.encoder.feature_dim, hidden_dim,
+                               num_actions, hidden_depth)
             # END TODO
         else:
             self.Q = utils.mlp(self.encoder.feature_dim, hidden_dim,
@@ -217,9 +218,9 @@ class Critic(nn.Module):
 
         if self.dueling:
             # TODO dueling DQN, compute the q value from the value and advantage network
-            v = None
-            a = None
-            q = None
+            v = self.V(obs)
+            a = self.A(obs)
+            q = v + (a - a.mean())
             # END TODO
         else:
             q = self.Q(obs)
@@ -297,7 +298,12 @@ class DRQLAgent(object):
                 # Find the target Q value based on the critic
                 # and the critic target networks to find the right
                 # value of target_Q
-                target_Q = None
+                next_Q_values=self.critic(next_obs, use_aug=True)
+                next_Q_state_values=self.critic_target(next_obs, use_aug=True)
+
+                next_Q=next_Q_state_values.gather(1,torch.max(next_Q_values,dim=1)[1].unsqueeze(1))
+                target_Q =  reward + (not_done * discount * next_Q)
+
                 # End TODO
             else:
                 next_Q = self.critic_target(next_obs, use_aug=True)
@@ -351,8 +357,11 @@ class DRQLAgent(object):
 
         if prioritized_replay:
             # TODO prioritized replay buffer: update the priorities in the replay buffer using td_errors
-            pass
+            
             # End TODO
+            prioritized_replay_eps=1e-04
+            new_prios= np.abs(td_errors)+ prioritized_replay_eps
+            replay_buffer.update_priorities(idxs, new_prios)
 
         if step % self.critic_target_update_frequency == 0:
             utils.soft_update_params(self.critic, self.critic_target,
