@@ -185,7 +185,13 @@ class Critic(nn.Module):
             'none':
             nn.Identity(),
             'all':
-            nn.Identity(), # TODO DrQ fix this line.
+            nn.Sequential(nn.ReplicationPad2d(image_pad),
+                          kornia.augmentation.RandomCrop((84, 84)),
+                          Intensity(scale=intensity_scale),
+                          nn.ZeroPad2d(image_pad),
+                          kornia.augmentation.RandomCrop((84, 84)),
+                          kornia.augmentation.RandomRotation(degrees=5.0),
+                          kornia.augmentation.RandomHorizontalFlip(p=0.5)), # TODO DrQ fix this line.
         }
 
         assert aug_type in AUGMENTATIONS.keys()
@@ -220,7 +226,7 @@ class Critic(nn.Module):
             # TODO dueling DQN, compute the q value from the value and advantage network
             v = self.V(obs)
             a = self.A(obs)
-            q = v + (a - a.mean())
+            q = v + (a - a.mean(dim=1,keepdim=True))
             # END TODO
         else:
             q = self.Q(obs)

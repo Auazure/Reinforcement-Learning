@@ -5,12 +5,12 @@ terminal_on_life_loss: true
 # train
 num_train_steps: 100001
 num_train_iters: 1
-num_exploration_steps: 5000 # 50000
+num_exploration_steps: 3000 # 50000
 start_training_steps: 1600
 min_eps: 0.1
 replay_buffer_capacity: ${num_train_steps}
 # TODO prioritized replay buffer change this
-prioritized_replay: false
+prioritized_replay: true
 prioritized_replay_alpha: 0.6
 seed: 1
 # eval
@@ -53,8 +53,8 @@ agent:
     weight_decay: ${weight_decay}
     adam_eps: ${adam_eps}
     max_grad_norm: ${max_grad_norm}
-    critic_tau: 1.0
-    critic_target_update_frequency: 1
+    critic_tau: 0.01
+    critic_target_update_frequency: 2
     batch_size: ${batch_size}
     multistep_return: 10
     eval_eps: 0.05
